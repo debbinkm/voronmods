@@ -1,6 +1,6 @@
 # Klipper extension for Ntfy.sh notification
 #
-# Copyright (C) 2024 Matthew Debbink <matthew@debb.ink>
+# Copyright (C) 2025 Matthew Debbink <matthew@debb.ink>
 #
 # This file may be distributed under the terms of the GNU AGPLv3 license.
 
@@ -19,6 +19,7 @@ class NtfyClass:
         self.token = config.get('token', None)
         self.topic = config.get('topic')
         self.title = config.get('title', 'Klipper Notification')
+        self.link = config.get('link', None)
         self.verbose = config.getboolean('verbose', False)
         
         # register gcode commands
@@ -37,7 +38,7 @@ class NtfyClass:
             self.gcode.respond_info('Ntfy notification for Klipper.\nUSAGE: NTFY MSG="message" [TITLE="title"]\nTITLE parameter is optional')
             return
 
-        # send message
+        # klipper console output
         if self.verbose:
             self.gcode.respond_info(f"Sending Ntfy message: {title} - {message}")
 
@@ -47,19 +48,22 @@ class NtfyClass:
             "Title": title
         }
 
+        # append optional fields
+        if self.link:
+            headers["Click"] = f"{self.link}"
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
 
         try:
-            # Parse the URL to get the hostname and path
+            # parse the URL to get the hostname and path
             parsed_url = http.client.urlsplit(url)
             connection = http.client.HTTPSConnection(parsed_url.hostname, parsed_url.port or 443, timeout=5)
             
-            # Send the POST request
+            # send the POST request
             connection.request("POST", parsed_url.path, body=message, headers=headers)
             response = connection.getresponse()
             
-            # Read and print the response
+            # read and print the response
             response_data = response.read().decode()
             if self.verbose: 
                 self.gcode.respond_info(f"Status: {response.status} {response.reason}")
