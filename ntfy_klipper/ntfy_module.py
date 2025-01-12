@@ -5,6 +5,7 @@
 # This file may be distributed under the terms of the GNU AGPLv3 license.
 
 import http.client
+import threading
 
 class NtfyClass:
 
@@ -31,6 +32,9 @@ class NtfyClass:
     cmd_NTFY_help = "Sending message to Ntfy.sh server"
 
     def cmd_NTFY(self, params):
+        threading.Thread(target=self.send_ntfy_message, args=(params,)).start()
+
+    def send_ntfy_message(self, params):
         message = params.get('MSG', '')
         title = params.get('TITLE', self.title)
 
